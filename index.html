@@ -559,7 +559,7 @@
             const nextSrc = nextArt ? nextArt.getAttribute('src') : null;
 
             // 部分跨頁有兩張原圖，提供小型切換鍵，不浪費已上傳的畫作。
-            if (nextSrc) {
+            if (nextSrc && nextSrc !== firstSrc) {
                 let currentArt = 0;
                 const choices = [firstSrc, nextSrc];
                 const switchArt = document.createElement('button');
