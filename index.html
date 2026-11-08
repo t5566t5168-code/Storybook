@@ -173,9 +173,106 @@
         .cover-illustration { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center center; }
         .page.back-cover .story-illustration { height:200px; max-height:43%; }
         @media (max-width:850px) { .story-illustration { height:38%; max-height:200px; } .story-text { font-size:clamp(.77rem,3.4vw,1.1rem); line-height:1.6; } .page { padding:clamp(10px,3vw,24px); } }
+
+        /* 插圖滿版閱讀模式：以柔焦背景填滿紙張，主圖完整保留不裁切 */
+        body.full-bleed .page.illustrated {
+            padding: 0;
+            isolation: isolate;
+            background: #e7e5da;
+        }
+        body.full-bleed .page.illustrated::before {
+            content: "";
+            position: absolute;
+            inset: -14px;
+            background-image: var(--page-art);
+            background-size: cover;
+            background-position: center;
+            filter: blur(13px) brightness(0.82);
+            z-index: 0;
+        }
+        body.full-bleed .page.illustrated .page-content {
+            position: relative;
+            z-index: 1;
+            min-height: 0;
+            width: 100%;
+            flex: 1;
+            padding: 0;
+            gap: 0;
+            justify-content: flex-end !important;
+            align-items: stretch;
+        }
+        body.full-bleed .page.illustrated .story-illustration {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            max-height: none;
+            object-fit: contain;
+            object-position: center top;
+            box-shadow: none;
+            border-radius: 0;
+            background: transparent;
+            z-index: 0;
+        }
+        body.full-bleed .page.illustrated .page-content > p {
+            position: relative;
+            z-index: 1;
+            margin: 4px 14px 28px !important;
+            padding: 13px 15px;
+            border-radius: 12px;
+            background: rgba(255, 251, 244, .94);
+            color: #493d32 !important;
+            font-size: .96rem !important;
+            line-height: 1.62;
+            text-align: left;
+            box-shadow: 0 3px 18px rgba(42, 35, 27, .13);
+            overflow-wrap: anywhere;
+        }
+        body.full-bleed .page.illustrated.back-cover .page-content > p {
+            margin-bottom: 6px !important;
+            padding: 9px 12px;
+            font-size: .87rem !important;
+            line-height: 1.48;
+        }
+        body.full-bleed .page.illustrated.back-cover .page-content > p:last-child {
+            margin-bottom: 30px !important;
+        }
+        body.full-bleed .page.illustrated .page-number {
+            position: absolute;
+            bottom: 7px;
+            right: 15px;
+            z-index: 2;
+            color: #4e453d !important;
+            border-radius: 20px;
+            padding: 0 8px;
+            background: rgba(255, 251, 244, .85);
+            margin-top: 0;
+        }
+        .layout-switch {
+            background: #6b635a;
+            color: white;
+            border-radius: 999px;
+            padding: .5rem 1.2rem;
+            font-weight: 700;
+            box-shadow: 0 3px 8px rgba(0,0,0,.12);
+        }
+        .layout-switch:hover { background: #504a44; }
+        @media (max-width: 850px) {
+            body.full-bleed .page.illustrated .page-content > p {
+                font-size: clamp(.67rem, 2.7vw, .94rem) !important;
+                padding: 9px 11px;
+                margin: 3px 10px 25px !important;
+                line-height: 1.48;
+            }
+            body.full-bleed .page.illustrated.back-cover .page-content > p {
+                font-size: clamp(.62rem, 2.4vw, .8rem) !important;
+                padding: 7px 9px;
+                line-height: 1.37;
+            }
+        }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center py-6 text-gray-800">
+<body class="full-bleed min-h-screen flex flex-col items-center py-6 text-gray-800">
 
     <header class="text-center mb-4 px-4">
         <h1 class="text-3xl md:text-4xl font-bold text-[#4a6350] drop-shadow-sm mb-2">《小甲的森林回家路》</h1>
@@ -306,6 +403,12 @@
         </div>
     </div>
 
+    <div class="flex justify-center px-3 mb-1">
+        <button id="layoutBtn" class="layout-switch" onclick="toggleBookLayout()" aria-pressed="true">
+            目前：滿版插畫｜切換原本排版
+        </button>
+    </div>
+
     <!-- 底部控制按鈕 -->
     <div class="flex gap-4 mt-4 z-10">
         <button id="prevBtn" onclick="goPrev()" class="px-6 py-2 bg-[#d2a679] hover:bg-[#b88c60] text-white font-bold rounded-full shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
@@ -381,6 +484,23 @@
                 currentLeafIndex--;
                 updateBookPositionAndButtons();
             }
+        }
+
+        // 建立插圖頁標記，保留原始圖完整比例，用柔焦圖補滿直式頁面。
+        document.querySelectorAll('.page').forEach(page => {
+            const image = page.querySelector('img.story-illustration');
+            if (!image) return;
+            page.classList.add('illustrated');
+            page.style.setProperty('--page-art', 'url("' + image.getAttribute('src') + '")');
+        });
+
+        function toggleBookLayout() {
+            const enabled = document.body.classList.toggle('full-bleed');
+            const button = document.getElementById('layoutBtn');
+            button.textContent = enabled
+                ? '目前：滿版插畫｜切換原本排版'
+                : '目前：原本排版｜切換滿版插畫';
+            button.setAttribute('aria-pressed', String(enabled));
         }
 
         // 初始化
