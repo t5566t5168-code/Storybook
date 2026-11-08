@@ -494,21 +494,47 @@
         }
 
         function goNext() {
-            if (currentLeafIndex < totalLeaves) {
-                const leafToFlip = document.getElementById(`leaf-${currentLeafIndex + 1}`);
-                leafToFlip.classList.add('flipped');
-                currentLeafIndex++;
-                updateBookPositionAndButtons();
+            if (currentLeafIndex >= totalLeaves) return;
+
+            // 圖文對開時，兩張插畫的段落先顯示第二張，再真正翻頁。
+            const fullSpread = document.body.classList.contains('full-bleed');
+            const currentArtSequence = fullSpread ? spreadArtByIndex.get(currentLeafIndex) : null;
+            if (currentArtSequence && currentArtSequence.getIndex() === 0) {
+                currentArtSequence.show(1);
+                return;
             }
+
+            // 進入下一個段落時，總是先顯示該段落的第一張插畫。
+            if (fullSpread) {
+                const upcoming = spreadArtByIndex.get(currentLeafIndex + 1);
+                if (upcoming) upcoming.show(0);
+            }
+            const leafToFlip = document.getElementById(`leaf-${currentLeafIndex + 1}`);
+            leafToFlip.classList.add('flipped');
+            currentLeafIndex++;
+            updateBookPositionAndButtons();
         }
 
         function goPrev() {
-            if (currentLeafIndex > 0) {
-                const leafToFlipBack = document.getElementById(`leaf-${currentLeafIndex}`);
-                leafToFlipBack.classList.remove('flipped');
-                currentLeafIndex--;
-                updateBookPositionAndButtons();
+            if (currentLeafIndex <= 0) return;
+
+            const fullSpread = document.body.classList.contains('full-bleed');
+            const currentArtSequence = fullSpread ? spreadArtByIndex.get(currentLeafIndex) : null;
+            // 反方向閱讀時，第二張插畫先退回第一張，再真正翻回上一頁。
+            if (currentArtSequence && currentArtSequence.getIndex() === 1) {
+                currentArtSequence.show(0);
+                return;
             }
+
+            // 倒退回有兩張插畫的上一段時，先顯示那段的最後一張插畫。
+            if (fullSpread) {
+                const previous = spreadArtByIndex.get(currentLeafIndex - 1);
+                if (previous) previous.show(1);
+            }
+            const leafToFlipBack = document.getElementById(`leaf-${currentLeafIndex}`);
+            leafToFlipBack.classList.remove('flipped');
+            currentLeafIndex--;
+            updateBookPositionAndButtons();
         }
 
         // 為每組對開書頁建立：左側插畫、右側連續兩段故事文字。
@@ -518,6 +544,8 @@
             leaf.querySelector('.page.back')
         ]);
         const artResetters = [];
+        // 對開頁對應的插畫狀態，供上一頁／下一頁操作控制。
+        const spreadArtByIndex = new Map();
         const artFocalPoints = {
             'images/2.jpg': '55% 50%',
             'images/3.jpg': '68% 50%',
@@ -564,30 +592,33 @@
             art.style.objectPosition = artFocalPoints[firstSrc] || 'center';
             const nextSrc = nextArt ? nextArt.getAttribute('src') : null;
 
-            // 部分跨頁有兩張原圖，提供小型切換鍵，不浪費已上傳的畫作。
+            // 兩張插畫共用狀態：可由下一頁／上一頁控制，也能直接按切換插畫。
             if (nextSrc && nextSrc !== firstSrc) {
                 let currentArt = 0;
                 const choices = [firstSrc, nextSrc];
                 const switchArt = document.createElement('button');
                 switchArt.type = 'button';
                 switchArt.className = 'spread-art-switch';
-                switchArt.textContent = '切換插畫 1 / 2';
                 switchArt.setAttribute('aria-label', '查看本段故事的另一張插畫');
+                const showArtwork = index => {
+                    currentArt = Math.max(0, Math.min(choices.length - 1, index));
+                    art.setAttribute('src', choices[currentArt]);
+                    art.style.objectPosition = artFocalPoints[choices[currentArt]] || 'center';
+                    switchArt.textContent = '切換插畫 ' + (currentArt + 1) + ' / ' + choices.length;
+                    switchArt.setAttribute('aria-label', '目前第 ' + (currentArt + 1) + ' 張插畫，按下可切換');
+                };
+                showArtwork(0);
                 switchArt.addEventListener('click', event => {
                     event.preventDefault();
                     event.stopPropagation();
-                    currentArt = (currentArt + 1) % 2;
-                    art.setAttribute('src', choices[currentArt]);
-                    art.style.objectPosition = artFocalPoints[choices[currentArt]] || 'center';
-                    switchArt.textContent = '切換插畫 ' + (currentArt + 1) + ' / 2';
+                    showArtwork((currentArt + 1) % choices.length);
                 });
                 left.appendChild(switchArt);
-                artResetters.push(() => {
-                    currentArt = 0;
-                    art.setAttribute('src', firstSrc);
-                    art.style.objectPosition = artFocalPoints[firstSrc] || 'center';
-                    switchArt.textContent = '切換插畫 1 / 2';
+                spreadArtByIndex.set(n, {
+                    getIndex: () => currentArt,
+                    show: showArtwork
                 });
+                artResetters.push(() => showArtwork(0));
             }
         }
 
