@@ -109,12 +109,18 @@
             justify-content: center;
         }
         
-        /* 封底特殊樣式 */
+        /* 封底與內頁一致：米白色紙張、深色文字 */
         .page.back-cover {
-            background-color: #6a8d73;
-            color: #fff;
-            box-shadow: inset -4px 0 10px rgba(0,0,0,0.2), -5px 5px 20px rgba(0,0,0,0.3);
-            border-right: 10px solid #4a6350;
+            background-color: #fcfbf7;
+            color: #4a3f35;
+            box-shadow: inset -4px 0 10px rgba(0,0,0,0.05), -2px 4px 10px rgba(0,0,0,0.15);
+            border-right: 10px solid #e6e1d8;
+        }
+        .page.back-cover p {
+            color: #4a3f35 !important;
+        }
+        .page.back-cover .page-number {
+            color: #a39586 !important;
         }
 
         .page-content {
