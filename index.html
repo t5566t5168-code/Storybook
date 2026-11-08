@@ -214,6 +214,42 @@
             border-radius: 0;
             box-shadow: none;
         }
+        /* 雙插畫以獨立圖層交替呈現，不再依賴直接改變原圖 src。 */
+        .page.spread-left .spread-secondary-art { display: none; }
+        body.full-bleed .page.spread-left .page-content > .story-illustration,
+        body.full-bleed .page.spread-left .page-content > .spread-extra-art {
+            z-index: 1;
+        }
+        body.full-bleed .page.spread-left .page-content > .spread-secondary-art {
+            display: block;
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            max-height: none;
+            object-fit: cover;
+            object-position: center;
+            opacity: 0;
+            visibility: hidden;
+            transform-origin: right center;
+            transform: translateX(10px) scale(1.015);
+            transition: opacity .5s ease, transform .5s ease, visibility .5s;
+            z-index: 2;
+            border: 0;
+            border-radius: 0;
+            pointer-events: none;
+        }
+        body.full-bleed .page.spread-left.show-second-art .page-content > .spread-secondary-art {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(0) scale(1);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            body.full-bleed .page.spread-left .page-content > .spread-secondary-art {
+                transition: none;
+                transform: none;
+            }
+        }
         body.full-bleed .page.spread-left .page-content > p,
         body.full-bleed .page.spread-left > .page-number { display: none !important; }
         body.full-bleed .page.spread-left::after {
@@ -459,6 +495,13 @@
             // 更新按鈕狀態
             prevBtn.disabled = currentLeafIndex === 0;
             nextBtn.disabled = currentLeafIndex === totalLeaves;
+            const activeSequence = document.body.classList.contains('full-bleed')
+                ? spreadArtByIndex.get(currentLeafIndex)
+                : null;
+            nextBtn.textContent = activeSequence && activeSequence.getIndex() === 0
+                ? '下一張插畫 ▶' : '下一頁 ▶';
+            prevBtn.textContent = activeSequence && activeSequence.getIndex() === 1
+                ? '◀ 上一張插畫' : '◀ 上一頁';
 
             // 更新書本整體在畫面上的位置 (模擬翻開時置中)
             if (currentLeafIndex === 0) {
@@ -501,6 +544,7 @@
             const currentArtSequence = fullSpread ? spreadArtByIndex.get(currentLeafIndex) : null;
             if (currentArtSequence && currentArtSequence.getIndex() === 0) {
                 currentArtSequence.show(1);
+                updateBookPositionAndButtons();
                 return;
             }
 
@@ -523,6 +567,7 @@
             // 反方向閱讀時，第二張插畫先退回第一張，再真正翻回上一頁。
             if (currentArtSequence && currentArtSequence.getIndex() === 1) {
                 currentArtSequence.show(0);
+                updateBookPositionAndButtons();
                 return;
             }
 
@@ -592,26 +637,32 @@
             art.style.objectPosition = artFocalPoints[firstSrc] || 'center';
             const nextSrc = nextArt ? nextArt.getAttribute('src') : null;
 
-            // 兩張插畫共用狀態：可由下一頁／上一頁控制，也能直接按切換插畫。
+            // 使用兩張實際圖片疊層切換，讓「下一頁」第一次操作可見地換圖。
             if (nextSrc && nextSrc !== firstSrc) {
                 let currentArt = 0;
-                const choices = [firstSrc, nextSrc];
+                const secondImage = document.createElement('img');
+                secondImage.className = 'spread-secondary-art';
+                secondImage.src = nextSrc;
+                secondImage.alt = nextArt.alt || '本段故事的第二張插畫';
+                secondImage.loading = 'eager';
+                secondImage.decoding = 'async';
+                secondImage.style.objectPosition = artFocalPoints[nextSrc] || 'center';
+                left.querySelector('.page-content').appendChild(secondImage);
                 const switchArt = document.createElement('button');
                 switchArt.type = 'button';
                 switchArt.className = 'spread-art-switch';
-                switchArt.setAttribute('aria-label', '查看本段故事的另一張插畫');
                 const showArtwork = index => {
-                    currentArt = Math.max(0, Math.min(choices.length - 1, index));
-                    art.setAttribute('src', choices[currentArt]);
-                    art.style.objectPosition = artFocalPoints[choices[currentArt]] || 'center';
-                    switchArt.textContent = '切換插畫 ' + (currentArt + 1) + ' / ' + choices.length;
+                    currentArt = Math.max(0, Math.min(1, index));
+                    left.classList.toggle('show-second-art', currentArt === 1);
+                    switchArt.textContent = '插畫 ' + (currentArt + 1) + ' / 2';
                     switchArt.setAttribute('aria-label', '目前第 ' + (currentArt + 1) + ' 張插畫，按下可切換');
                 };
                 showArtwork(0);
                 switchArt.addEventListener('click', event => {
                     event.preventDefault();
                     event.stopPropagation();
-                    showArtwork((currentArt + 1) % choices.length);
+                    showArtwork((currentArt + 1) % 2);
+                    updateBookPositionAndButtons();
                 });
                 left.appendChild(switchArt);
                 spreadArtByIndex.set(n, {
@@ -630,6 +681,7 @@
                 ? '目前：圖文對開滿版｜切換原本排版'
                 : '目前：原本排版｜切換圖文對開滿版';
             button.setAttribute('aria-pressed', String(enabled));
+            updateBookPositionAndButtons();
         }
 
         // 初始化
