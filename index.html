@@ -174,100 +174,119 @@
         .page.back-cover .story-illustration { height:200px; max-height:43%; }
         @media (max-width:850px) { .story-illustration { height:38%; max-height:200px; } .story-text { font-size:clamp(.77rem,3.4vw,1.1rem); line-height:1.6; } .page { padding:clamp(10px,3vw,24px); } }
 
-        /* 插圖滿版閱讀模式：以柔焦背景填滿紙張，主圖完整保留不裁切 */
-        body.full-bleed .page.illustrated {
+        /* 圖文對開繪本模式：左頁滿版水彩插畫，右頁白紙文字 */
+        .spread-text-layer,
+        .spread-extra-art,
+        .spread-art-switch { display: none; }
+
+        body.full-bleed .page.spread-left {
             padding: 0;
+            background: #e3e9df;
             isolation: isolate;
-            background: #e7e5da;
         }
-        body.full-bleed .page.illustrated::before {
-            content: "";
+        body.full-bleed .page.spread-left .page-content {
             position: absolute;
-            inset: -14px;
-            background-image: var(--page-art);
-            background-size: cover;
-            background-position: center;
-            filter: blur(13px) brightness(0.82);
-            z-index: 0;
-        }
-        body.full-bleed .page.illustrated .page-content {
-            position: relative;
-            z-index: 1;
-            min-height: 0;
+            inset: 0;
             width: 100%;
-            flex: 1;
-            padding: 0;
+            height: 100%;
+            margin: 0;
+            padding: 0 !important;
             gap: 0;
-            justify-content: flex-end !important;
-            align-items: stretch;
+            display: block;
         }
-        body.full-bleed .page.illustrated .story-illustration {
+        body.full-bleed .page.spread-left .story-illustration,
+        body.full-bleed .page.spread-left .spread-extra-art {
+            display: block;
             position: absolute;
             inset: 0;
             width: 100%;
             height: 100%;
             max-height: none;
-            object-fit: contain;
-            object-position: center top;
-            box-shadow: none;
+            object-fit: cover;
+            object-position: center;
+            border: none;
             border-radius: 0;
-            background: transparent;
-            z-index: 0;
+            box-shadow: none;
         }
-        body.full-bleed .page.illustrated .page-content > p {
-            position: relative;
-            z-index: 1;
-            margin: 4px 14px 28px !important;
-            padding: 13px 15px;
-            border-radius: 12px;
-            background: rgba(255, 251, 244, .94);
-            color: #493d32 !important;
-            font-size: .96rem !important;
-            line-height: 1.62;
-            text-align: left;
-            box-shadow: 0 3px 18px rgba(42, 35, 27, .13);
-            overflow-wrap: anywhere;
-        }
-        body.full-bleed .page.illustrated.back-cover .page-content > p {
-            margin-bottom: 6px !important;
-            padding: 9px 12px;
-            font-size: .87rem !important;
-            line-height: 1.48;
-        }
-        body.full-bleed .page.illustrated.back-cover .page-content > p:last-child {
-            margin-bottom: 30px !important;
-        }
-        body.full-bleed .page.illustrated .page-number {
+        body.full-bleed .page.spread-left .page-content > p,
+        body.full-bleed .page.spread-left > .page-number { display: none !important; }
+        body.full-bleed .page.spread-left::after {
+            content: "";
             position: absolute;
-            bottom: 7px;
-            right: 15px;
+            pointer-events: none;
+            inset: 0 0 0 auto;
+            width: 18px;
+            background: linear-gradient(to left,rgba(53,39,26,.18),transparent);
             z-index: 2;
-            color: #4e453d !important;
-            border-radius: 20px;
-            padding: 0 8px;
-            background: rgba(255, 251, 244, .85);
+        }
+        body.full-bleed .page.spread-left .spread-art-switch {
+            display: block;
+            position: absolute;
+            left: 14px;
+            bottom: 14px;
+            z-index: 6;
+            color: #473a2c;
+            background: rgba(255,252,242,.90);
+            border: 1px solid rgba(78,65,44,.20);
+            border-radius: 999px;
+            padding: 7px 12px;
+            box-shadow: 0 2px 7px rgba(0,0,0,.15);
+            font-size: .76rem;
+            font-weight: 600;
+        }
+        body.full-bleed .page.spread-right {
+            padding: 0;
+            background: #fcfbf7;
+            background-image: repeating-linear-gradient(0deg, rgba(125,111,91,.014) 0px, rgba(125,111,91,.014) 1px, transparent 1px, transparent 7px);
+            color: #352d25;
+        }
+        body.full-bleed .page.spread-right > .page-content { display: none !important; }
+        body.full-bleed .page.spread-right .spread-text-layer {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            flex-direction: column;
+            justify-content: center;
+            gap: 1.2rem;
+            padding: 38px 35px 20px;
+            overflow-y: auto;
+        }
+        body.full-bleed .page.spread-right .spread-text-layer p {
+            margin: 0;
+            color: #36312c;
+            font-family: 'Noto Sans TC', sans-serif;
+            font-weight: 400;
+            font-size: 1.07rem;
+            line-height: 1.82;
+            letter-spacing: .015em;
+            text-align: left;
+        }
+        body.full-bleed .page.spread-right .page-number {
             margin-top: 0;
+            margin-bottom: 19px;
+            color: #988d7e;
         }
         .layout-switch {
             background: #6b635a;
-            color: white;
+            color: #fff;
             border-radius: 999px;
             padding: .5rem 1.2rem;
             font-weight: 700;
             box-shadow: 0 3px 8px rgba(0,0,0,.12);
         }
         .layout-switch:hover { background: #504a44; }
-        @media (max-width: 850px) {
-            body.full-bleed .page.illustrated .page-content > p {
-                font-size: clamp(.67rem, 2.7vw, .94rem) !important;
-                padding: 9px 11px;
-                margin: 3px 10px 25px !important;
-                line-height: 1.48;
+        @media (max-width:850px) {
+            body.full-bleed .page.spread-right .spread-text-layer { padding: 21px 17px 10px; gap: .7rem; }
+            body.full-bleed .page.spread-right .spread-text-layer p {
+                font-size: clamp(.69rem, 2.8vw, 1rem);
+                line-height: 1.6;
+                letter-spacing: 0;
             }
-            body.full-bleed .page.illustrated.back-cover .page-content > p {
-                font-size: clamp(.62rem, 2.4vw, .8rem) !important;
-                padding: 7px 9px;
-                line-height: 1.37;
+            body.full-bleed .page.spread-left .spread-art-switch {
+                font-size: .65rem;
+                padding: 5px 8px;
+                bottom: 10px;
+                left: 8px;
             }
         }
     </style>
@@ -405,7 +424,7 @@
 
     <div class="flex justify-center px-3 mb-1">
         <button id="layoutBtn" class="layout-switch" onclick="toggleBookLayout()" aria-pressed="true">
-            目前：滿版插畫｜切換原本排版
+            目前：圖文對開滿版｜切換原本排版
         </button>
     </div>
 
@@ -486,20 +505,93 @@
             }
         }
 
-        // 建立插圖頁標記，保留原始圖完整比例，用柔焦圖補滿直式頁面。
-        document.querySelectorAll('.page').forEach(page => {
-            const image = page.querySelector('img.story-illustration');
-            if (!image) return;
-            page.classList.add('illustrated');
-            page.style.setProperty('--page-art', 'url("' + image.getAttribute('src') + '")');
-        });
+        // 為每組對開書頁建立：左側插畫、右側連續兩段故事文字。
+        // 原有12頁和翻頁邏輯完全保留，切換原本排版時會還原原圖。
+        const bookPages = Array.from(document.querySelectorAll('#book .leaf')).flatMap(leaf => [
+            leaf.querySelector('.page.front'),
+            leaf.querySelector('.page.back')
+        ]);
+        const artResetters = [];
+        const artFocalPoints = {
+            'images/2.jpg': '55% 50%',
+            'images/3.jpg': '68% 50%',
+            'images/4.jpg': '60% 50%',
+            'images/5.jpg': '58% 50%',
+            'images/6.jpg': '55% 50%',
+            'images/7.jpg': '66% 50%',
+            'images/8.jpg': '54% 50%',
+            'images/9.jpg': '60% 50%'
+        };
+
+        for (let n = 1; n <= 9; n += 2) {
+            const left = bookPages[n];
+            const right = bookPages[n + 1];
+            if (!left || !right) continue;
+            left.classList.add('spread-left');
+            right.classList.add('spread-right');
+
+            const textPanel = document.createElement('div');
+            textPanel.className = 'spread-text-layer';
+            textPanel.setAttribute('aria-label', '繪本故事文字');
+            [left, right].forEach(page => {
+                const originalText = page.querySelector('.page-content > p');
+                if (!originalText) return;
+                const p = document.createElement('p');
+                p.textContent = originalText.textContent.trim();
+                textPanel.appendChild(p);
+            });
+            right.appendChild(textPanel);
+
+            let art = left.querySelector('img.story-illustration');
+            const nextArt = right.querySelector('img.story-illustration');
+
+            // 第10頁原本只有文字，對開模式改顯示回家插畫。
+            if (!art && nextArt) {
+                art = document.createElement('img');
+                art.className = 'spread-extra-art';
+                art.src = nextArt.getAttribute('src');
+                art.alt = nextArt.alt;
+                left.querySelector('.page-content').prepend(art);
+            }
+            if (!art) continue;
+            const firstSrc = art.getAttribute('src');
+            art.style.objectPosition = artFocalPoints[firstSrc] || 'center';
+            const nextSrc = nextArt ? nextArt.getAttribute('src') : null;
+
+            // 部分跨頁有兩張原圖，提供小型切換鍵，不浪費已上傳的畫作。
+            if (nextSrc) {
+                let currentArt = 0;
+                const choices = [firstSrc, nextSrc];
+                const switchArt = document.createElement('button');
+                switchArt.type = 'button';
+                switchArt.className = 'spread-art-switch';
+                switchArt.textContent = '切換插畫 1 / 2';
+                switchArt.setAttribute('aria-label', '查看本段故事的另一張插畫');
+                switchArt.addEventListener('click', event => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    currentArt = (currentArt + 1) % 2;
+                    art.setAttribute('src', choices[currentArt]);
+                    art.style.objectPosition = artFocalPoints[choices[currentArt]] || 'center';
+                    switchArt.textContent = '切換插畫 ' + (currentArt + 1) + ' / 2';
+                });
+                left.appendChild(switchArt);
+                artResetters.push(() => {
+                    currentArt = 0;
+                    art.setAttribute('src', firstSrc);
+                    art.style.objectPosition = artFocalPoints[firstSrc] || 'center';
+                    switchArt.textContent = '切換插畫 1 / 2';
+                });
+            }
+        }
 
         function toggleBookLayout() {
             const enabled = document.body.classList.toggle('full-bleed');
             const button = document.getElementById('layoutBtn');
+            if (!enabled) artResetters.forEach(reset => reset());
             button.textContent = enabled
-                ? '目前：滿版插畫｜切換原本排版'
-                : '目前：原本排版｜切換滿版插畫';
+                ? '目前：圖文對開滿版｜切換原本排版'
+                : '目前：原本排版｜切換圖文對開滿版';
             button.setAttribute('aria-pressed', String(enabled));
         }
 
