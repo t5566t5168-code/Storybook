@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小甲的森林回家路 - 3D 互動繪本</title>
+    <!-- 引入 Tailwind CSS 用於基本排版與按鈕，並自訂 3D 翻頁所需的 CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f7ede2;
+            background-image: radial-gradient(#ebd9c8 20%, transparent 20%), radial-gradient(#ebd9c8 20%, transparent 20%);
+            background-position: 0 0, 10px 10px;
+            background-size: 20px 20px;
+            overflow-x: hidden;
+        }
+
+        /* 3D 繪本核心樣式 */
+        .scene {
+            perspective: 2500px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .book-container {
+            position: relative;
+            width: 400px; /* 單頁寬度 */
+            height: 560px; /* 頁面高度 */
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            transform: translateX(0); /* 初始（封面）位置 */
+        }
+
+        /* 根據翻頁狀態調整書本整體位置，使其在畫面中保持視覺置中 */
+        .book-container.open {
+            transform: translateX(200px); /* 展開時向右平移半頁寬度，讓書脊對齊中心 */
+        }
+        
+        .book-container.closed-back {
+            transform: translateX(400px); /* 翻到底時平移完整頁寬 */
+        }
+
+        @media (max-width: 850px) {
+            .book-container {
+                width: 90vw;
+                height: 126vw; /* 保持比例 */
+                max-width: 400px;
+                max-height: 560px;
+            }
+            .book-container.open, .book-container.closed-back {
+                /* 手機版較難完美顯示左右雙頁，縮小展開時的平移量或讓容器適應 */
+                transform: translateX(0) scale(0.9); 
+            }
+            .scene {
+                perspective: 1500px;
+            }
+        }
+
+        .leaf {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transform-origin: left center;
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+            cursor: pointer;
+        }
+
+        .leaf.flipped {
+            transform: rotateY(-180deg);
+        }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background-color: #FDFBF7;
+            border-radius: 4px 12px 12px 4px;
+            box-shadow: inset 4px 0 10px rgba(0,0,0,0.05), 2px 4px 10px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        .page.back {
+            transform: rotateY(180deg);
+            border-radius: 12px 4px 4px 12px;
+            box-shadow: inset -4px 0 10px rgba(0,0,0,0.05), -2px 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* 封面特殊樣式 */
+        .page.cover {
+            background-color: #6a8d73;
+            color: #fff;
+            box-shadow: inset 4px 0 10px rgba(0,0,0,0.2), 5px 5px 20px rgba(0,0,0,0.3);
+            border-left: 10px solid #4a6350; /* 書脊視覺 */
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 封底特殊樣式 */
+        .page.back-cover {
+            background-color: #6a8d73;
+            color: #fff;
+            box-shadow: inset -4px 0 10px rgba(0,0,0,0.2), -5px 5px 20px rgba(0,0,0,0.3);
+            border-right: 10px solid #4a6350;
+        }
+
+        .page-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .illustration-box {
+            width: 100%;
+            height: 240px;
+            background: #f0ebd8;
+            border: 2px dashed #c6c0a3;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #7b7554;
+            font-size: 1.1rem;
+            font-weight: 500;
+            text-align: center;
+            padding: 1rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        .story-text {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #4a3f35;
+            text-align: justify;
+        }
+
+        .page-number {
+            font-size: 0.9rem;
+            color: #a39586;
+            text-align: center;
+            margin-top: auto;
+        }
+        
+        .leaf:hover:not(.flipped) {
+            transform: rotateY(-5deg);
+        }
+        
+        .leaf.flipped:hover {
+            transform: rotateY(-175deg);
+        }
+
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center py-6 text-gray-800">
+
+    <header class="text-center mb-4 px-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-[#4a6350] drop-shadow-sm mb-2">《小甲的森林回家路》</h1>
+        <p class="text-[#8c7355] text-sm md:text-base">點擊書本左右側或下方按鈕來翻頁</p>
+    </header>
+
+    <!-- 3D 繪本舞台 -->
+    <div class="scene">
+        <div id="book" class="book-container">
+            
+            <!-- Leaf 1: 封面(P1) / 內頁(P2) -->
+            <div class="leaf z-[6]" id="leaf-1" onclick="flipPage(0)">
+                <!-- 封面 (P1) -->
+                <div class="page front cover">
+                    <div class="page-content text-center">
+                        <div class="illustration-box" style="height: 220px; border-color: #8ba993; background: #e3e8cb; margin-bottom: 1rem;">插圖：小甲與小安在美麗的森林小徑上</div>
+                        <h2 class="text-3xl font-bold tracking-wide drop-shadow-md">《小甲的森林回家路》</h2>
+                    </div>
+                </div>
+                <!-- 內頁 (P2) -->
+                <div class="page back">
+                    <div class="page-content">
+                        <div class="illustration-box">插圖：小甲在夜晚的森林尋找食物</div>
+                        <p class="story-text">在一座綠油油的森林裡，住著一隻可愛的小穿山甲，名字叫小甲。每到夜晚，小甲就會走出洞穴，尋找最喜歡的螞蟻和白蟻。</p>
+                    </div>
+                    <div class="page-number">2</div>
+                </div>
+            </div>
+
+            <!-- Leaf 2: 內頁(P3) / 內頁(P4) -->
+            <div class="leaf z-[5]" id="leaf-2" onclick="flipPage(1)">
+                <!-- 內頁 (P3) -->
+                <div class="page front">
+                    <div class="page-content" style="justify-content: center; padding: 2rem;">
+                        <p class="story-text" style="text-align: center; font-size: 1.3rem;">有一天，小甲發現森林附近變得不一樣了。<br><br>原本安靜的地方出現了道路與施工圍籬，熟悉的小路也被擋住了。</p>
+                    </div>
+                    <div class="page-number">3</div>
+                </div>
+                <!-- 內頁 (P4) -->
+                <div class="page back">
+                    <div class="page-content">
+                        <div class="illustration-box">插圖：迷路的小甲蜷縮在草叢裡</div>
+                        <p class="story-text">「我的家在哪裡呢？」小甲沿著草叢慢慢前進，卻走到一條車子很多的馬路旁。看見汽車快速經過，小甲害怕得縮成一顆球。</p>
+                    </div>
+                    <div class="page-number">4</div>
+                </div>
+            </div>
+
+            <!-- Leaf 3: 內頁(P5) / 內頁(P6) -->
+            <div class="leaf z-[4]" id="leaf-3" onclick="flipPage(2)">
+                <!-- 內頁 (P5) -->
+                <div class="page front">
+                    <div class="page-content">
+                        <div class="illustration-box">插圖：小安和爸爸在安全距離外觀察小甲</div>
+                        <p class="story-text">這時，小男孩小安和爸爸剛好經過附近。「爸爸，你看！那裡有一隻穿山甲！」小安很擔心小甲，但他知道不能隨便觸碰野生動物。</p>
+                    </div>
+                    <div class="page-number">5</div>
+                </div>
+                <!-- 內頁 (P6) -->
+                <div class="page back">
+                    <div class="page-content">
+                        <div class="illustration-box">插圖：爸爸拿著手機通報保育人員</div>
+                        <p class="story-text">「爸爸，我們可以幫助牠嗎？」爸爸點點頭，拿出手機聯絡保育人員。小安希望有人能幫助小甲找到安全的回家路。</p>
+                    </div>
+                    <div class="page-number">6</div>
+                </div>
+            </div>
+
+            <!-- Leaf 4: 內頁(P7) / 內頁(P8) -->
+            <div class="leaf z-[3]" id="leaf-4" onclick="flipPage(3)">
+                <!-- 內頁 (P7) -->
+                <div class="page front">
+                    <div class="page-content">
+                        <div class="illustration-box">插圖：保育人員查看AI動物監測系統畫面</div>
+                        <p class="story-text">保育人員查看附近的 AI 動物監測系統。透過攝影機與影像辨識，系統發現了穿山甲出沒的資訊，提醒大家注意道路安全。</p>
+                    </div>
+                    <div class="page-number">7</div>
+                </div>
+                <!-- 內頁 (P8) -->
+                <div class="page back">
+                    <div class="page-content">
+                        <div class="illustration-box">插圖：夜晚道路旁的動物警示看板亮起</div>
+                        <p class="story-text">道路旁的智慧警示燈亮了起來。「注意野生動物，請減速慢行！」駕駛們看見提醒，紛紛放慢車速。</p>
+                    </div>
+                    <div class="page-number">8</div>
+                </div>
+            </div>
+
+            <!-- Leaf 5: 內頁(P9) / 內頁(P10) -->
+            <div class="leaf z-[2]" id="leaf-5" onclick="flipPage(4)">
+                <!-- 內頁 (P9) -->
+                <div class="page front">
+                    <div class="page-content">
+                        <div class="illustration-box">插圖：道路下方安全的生態通道</div>
+                        <p class="story-text">保育人員發現，附近有一條可以通往森林另一側的生態通道。「原來還有一條安全的路！」小安開心地說。大家保持安靜，讓小甲慢慢尋找通道入口。</p>
+                    </div>
+                    <div class="page-number">9</div>
+                </div>
+                <!-- 內頁 (P10) -->
+                <div class="page back">
+                    <div class="page-content" style="justify-content: center; padding: 2rem;">
+                        <p class="story-text" style="text-align: center; font-size: 1.3rem;">小甲小心地走向通道，先用鼻子聞了聞四周。<br><br>確定沒有危險後，牠勇敢地一步一步向前走。<br><br>通道的另一端，就是熟悉的森林。</p>
+                    </div>
+                    <div class="page-number">10</div>
+                </div>
+            </div>
+
+            <!-- Leaf 6: 內頁(P11) / 封底(P12) -->
+            <div class="leaf z-[1]" id="leaf-6" onclick="flipPage(5)">
+                <!-- 內頁 (P11) -->
+                <div class="page front">
+                    <div class="page-content">
+                        <div class="illustration-box">插圖：小甲回到熟悉的森林洞穴</div>
+                        <p class="story-text">穿過通道後，小甲終於回到熟悉的森林。牠聞到了泥土和樹木的味道，也找到了自己的洞穴。知道小甲平安回家，小安心裡充滿了喜悅。</p>
+                    </div>
+                    <div class="page-number">11</div>
+                </div>
+                <!-- 封底 (P12) -->
+                <div class="page back back-cover">
+                    <div class="page-content text-center" style="justify-content: space-around;">
+                        <div class="illustration-box" style="height: 180px; border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.2); color: #fff; margin-bottom: 0.5rem;">插圖：健康美麗的森林，小安與動物們和諧相處</div>
+                        <p class="text-sm md:text-base leading-relaxed text-white text-justify mt-2">從那天開始，小安更加珍惜森林裡的每一個生命。他明白了，科技可以幫助我們保護動物，但真正守護自然環境，還需要大家一起努力。</p>
+                        <p class="font-bold text-[#f7ede2] text-lg mt-2 tracking-wide">「一起守護森林，讓每隻動物都能安心回家！」</p>
+                    </div>
+                    <div class="page-number text-white/70">12 / 封底</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 底部控制按鈕 -->
+    <div class="flex gap-4 mt-4 z-10">
+        <button id="prevBtn" onclick="goPrev()" class="px-6 py-2 bg-[#d2a679] hover:bg-[#b88c60] text-white font-bold rounded-full shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            ◀ 上一頁
+        </button>
+        <button id="nextBtn" onclick="goNext()" class="px-6 py-2 bg-[#6a8d73] hover:bg-[#4a6350] text-white font-bold rounded-full shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            下一頁 ▶
+        </button>
+    </div>
+
+    <script>
+        // 總共 6 張紙 (Leaves)，對應 12 頁
+        const totalLeaves = 6;
+        let currentLeafIndex = 0; 
+        // currentLeafIndex 代表翻開了幾張紙。
+        // 0: 封面關閉, 1: 翻開第一張 (顯示 P2, P3), ..., 6: 全部翻完 (顯示封底)
+
+        const book = document.getElementById('book');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        function updateBookPositionAndButtons() {
+            // 更新按鈕狀態
+            prevBtn.disabled = currentLeafIndex === 0;
+            nextBtn.disabled = currentLeafIndex === totalLeaves;
+
+            // 更新書本整體在畫面上的位置 (模擬翻開時置中)
+            if (currentLeafIndex === 0) {
+                book.className = 'book-container'; // 封面置中 (視螢幕而定)
+            } else if (currentLeafIndex === totalLeaves) {
+                book.className = 'book-container closed-back'; // 封底置中
+            } else {
+                book.className = 'book-container open'; // 展開時書脊置中
+            }
+
+            // 更新 z-index，確保翻過去和未翻的頁面層級正確，避免破圖穿透
+            for (let i = 0; i < totalLeaves; i++) {
+                const leaf = document.getElementById(`leaf-${i + 1}`);
+                if (i < currentLeafIndex) {
+                    // 已翻過去的頁面（在左側），越早翻的 z-index 越低
+                    leaf.style.zIndex = i + 1;
+                } else {
+                    // 尚未翻的頁面（在右側），越上面的 z-index 越高
+                    leaf.style.zIndex = totalLeaves - i;
+                }
+            }
+        }
+
+        // 點擊紙張 (leaf) 直接翻頁的邏輯
+        function flipPage(index) {
+            if (index === currentLeafIndex) {
+                // 點擊的是右側最上面那張 -> 往下翻
+                goNext();
+            } else if (index === currentLeafIndex - 1) {
+                // 點擊的是左側最上面那張 -> 往回翻
+                goPrev();
+            }
+        }
+
+        function goNext() {
+            if (currentLeafIndex < totalLeaves) {
+                const leafToFlip = document.getElementById(`leaf-${currentLeafIndex + 1}`);
+                leafToFlip.classList.add('flipped');
+                currentLeafIndex++;
+                updateBookPositionAndButtons();
+            }
+        }
+
+        function goPrev() {
+            if (currentLeafIndex > 0) {
+                const leafToFlipBack = document.getElementById(`leaf-${currentLeafIndex}`);
+                leafToFlipBack.classList.remove('flipped');
+                currentLeafIndex--;
+                updateBookPositionAndButtons();
+            }
+        }
+
+        // 初始化
+        updateBookPositionAndButtons();
+
+    </script>
+</body>
+</html>
