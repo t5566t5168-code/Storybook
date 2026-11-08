@@ -165,6 +165,14 @@
             transform: rotateY(-175deg);
         }
 
+
+        /* 水彩插畫整合：保持原本 3D 翻頁結構 */
+        .story-illustration { width:100%; height:235px; max-height:45%; object-fit:contain; border-radius:10px; background:#f9f4e9; box-shadow:0 4px 10px rgba(61,47,33,.11); }
+        .page.cover { padding:0; background:#fbf6ec; overflow:hidden; }
+        .page.cover .page-content { gap:0; }
+        .cover-illustration { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center center; }
+        .page.back-cover .story-illustration { height:200px; max-height:43%; }
+        @media (max-width:850px) { .story-illustration { height:38%; max-height:200px; } .story-text { font-size:clamp(.77rem,3.4vw,1.1rem); line-height:1.6; } .page { padding:clamp(10px,3vw,24px); } }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center py-6 text-gray-800">
@@ -183,14 +191,13 @@
                 <!-- 封面 (P1) -->
                 <div class="page front cover">
                     <div class="page-content text-center">
-                        <div class="illustration-box" style="height: 220px; border-color: #8ba993; background: #e3e8cb; margin-bottom: 1rem;">插圖：小甲與小安在美麗的森林小徑上</div>
-                        <h2 class="text-3xl font-bold tracking-wide drop-shadow-md">《小甲的森林回家路》</h2>
+                        <img class="cover-illustration" src="images/cover.jpg" alt="《小甲的森林回家路》水彩封面，作者：李品澄，小安與穿山甲小甲在森林中" fetchpriority="high">
                     </div>
                 </div>
                 <!-- 內頁 (P2) -->
                 <div class="page back">
                     <div class="page-content">
-                        <div class="illustration-box">插圖：小甲在夜晚的森林尋找食物</div>
+                        <img class="story-illustration" src="images/2.jpg" alt="插圖：小甲在夜晚的森林尋找食物" loading="lazy">
                         <p class="story-text">在一座綠油油的森林裡，住著一隻可愛的小穿山甲，名字叫小甲。每到夜晚，小甲就會走出洞穴，尋找最喜歡的螞蟻和白蟻。</p>
                     </div>
                     <div class="page-number">2</div>
@@ -209,7 +216,7 @@
                 <!-- 內頁 (P4) -->
                 <div class="page back">
                     <div class="page-content">
-                        <div class="illustration-box">插圖：迷路的小甲蜷縮在草叢裡</div>
+                        <img class="story-illustration" src="images/3.jpg" alt="插圖：迷路的小甲蜷縮在草叢裡" loading="lazy">
                         <p class="story-text">「我的家在哪裡呢？」小甲沿著草叢慢慢前進，卻走到一條車子很多的馬路旁。看見汽車快速經過，小甲害怕得縮成一顆球。</p>
                     </div>
                     <div class="page-number">4</div>
@@ -221,7 +228,7 @@
                 <!-- 內頁 (P5) -->
                 <div class="page front">
                     <div class="page-content">
-                        <div class="illustration-box">插圖：小安和爸爸在安全距離外觀察小甲</div>
+                        <img class="story-illustration" src="images/4.jpg" alt="插圖：小安和爸爸在安全距離外觀察小甲" loading="lazy">
                         <p class="story-text">這時，小男孩小安和爸爸剛好經過附近。「爸爸，你看！那裡有一隻穿山甲！」小安很擔心小甲，但他知道不能隨便觸碰野生動物。</p>
                     </div>
                     <div class="page-number">5</div>
@@ -229,7 +236,7 @@
                 <!-- 內頁 (P6) -->
                 <div class="page back">
                     <div class="page-content">
-                        <div class="illustration-box">插圖：爸爸拿著手機通報保育人員</div>
+                        <img class="story-illustration" src="images/5.jpg" alt="插圖：爸爸拿著手機通報保育人員" loading="lazy">
                         <p class="story-text">「爸爸，我們可以幫助牠嗎？」爸爸點點頭，拿出手機聯絡保育人員。小安希望有人能幫助小甲找到安全的回家路。</p>
                     </div>
                     <div class="page-number">6</div>
@@ -241,7 +248,7 @@
                 <!-- 內頁 (P7) -->
                 <div class="page front">
                     <div class="page-content">
-                        <div class="illustration-box">插圖：保育人員查看AI動物監測系統畫面</div>
+                        <img class="story-illustration" src="images/6.jpg" alt="插圖：保育人員查看AI動物監測系統畫面" loading="lazy">
                         <p class="story-text">保育人員查看附近的 AI 動物監測系統。透過攝影機與影像辨識，系統發現了穿山甲出沒的資訊，提醒大家注意道路安全。</p>
                     </div>
                     <div class="page-number">7</div>
@@ -249,7 +256,7 @@
                 <!-- 內頁 (P8) -->
                 <div class="page back">
                     <div class="page-content">
-                        <div class="illustration-box">插圖：夜晚道路旁的動物警示看板亮起</div>
+                        <img class="story-illustration" src="images/7.jpg" alt="插圖：夜晚道路旁的動物警示看板亮起" loading="lazy">
                         <p class="story-text">道路旁的智慧警示燈亮了起來。「注意野生動物，請減速慢行！」駕駛們看見提醒，紛紛放慢車速。</p>
                     </div>
                     <div class="page-number">8</div>
@@ -261,7 +268,7 @@
                 <!-- 內頁 (P9) -->
                 <div class="page front">
                     <div class="page-content">
-                        <div class="illustration-box">插圖：道路下方安全的生態通道</div>
+                        <img class="story-illustration" src="images/8.jpg" alt="插圖：道路下方安全的生態通道" loading="lazy">
                         <p class="story-text">保育人員發現，附近有一條可以通往森林另一側的生態通道。「原來還有一條安全的路！」小安開心地說。大家保持安靜，讓小甲慢慢尋找通道入口。</p>
                     </div>
                     <div class="page-number">9</div>
@@ -280,7 +287,7 @@
                 <!-- 內頁 (P11) -->
                 <div class="page front">
                     <div class="page-content">
-                        <div class="illustration-box">插圖：小甲回到熟悉的森林洞穴</div>
+                        <img class="story-illustration" src="images/9.jpg" alt="插圖：小甲回到熟悉的森林洞穴" loading="lazy">
                         <p class="story-text">穿過通道後，小甲終於回到熟悉的森林。牠聞到了泥土和樹木的味道，也找到了自己的洞穴。知道小甲平安回家，小安心裡充滿了喜悅。</p>
                     </div>
                     <div class="page-number">11</div>
@@ -288,7 +295,7 @@
                 <!-- 封底 (P12) -->
                 <div class="page back back-cover">
                     <div class="page-content text-center" style="justify-content: space-around;">
-                        <div class="illustration-box" style="height: 180px; border-color: rgba(255,255,255,0.6); background: rgba(255,255,255,0.2); color: #fff; margin-bottom: 0.5rem;">插圖：健康美麗的森林，小安與動物們和諧相處</div>
+                        <img class="story-illustration" src="images/10.jpg" alt="插圖：健康美麗的森林，小安與動物們和諧相處" loading="lazy">
                         <p class="text-sm md:text-base leading-relaxed text-white text-justify mt-2">從那天開始，小安更加珍惜森林裡的每一個生命。他明白了，科技可以幫助我們保護動物，但真正守護自然環境，還需要大家一起努力。</p>
                         <p class="font-bold text-[#f7ede2] text-lg mt-2 tracking-wide">「一起守護森林，讓每隻動物都能安心回家！」</p>
                     </div>
